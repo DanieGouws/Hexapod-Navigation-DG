@@ -5,7 +5,7 @@ This robot is an 18 servo mechanical system driven by a Jetson Nano and Teensy. 
 In particular this repo will focus on duplicating their control methods and then extending them to more complex uneven terrain and similar applications of interest. The system will also be upgraded to run on modern ROS2 middleware.
 
 # ToDo
-Add code for the Simscape simulation. Add setup instructions 
-Add the hexapod code for both the teensy and the Jetson
-Add instructions referencing hardware description and setup.
-Add description of software setup for hexapod.
+- Add code for the Simscape simulation. Add setup instructions 
+- Add the hexapod code for both the teensy and the Jetson
+- Add instructions referencing hardware description and setup.
+- Add description of software setup for hexapod.
