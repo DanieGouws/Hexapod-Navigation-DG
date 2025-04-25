@@ -9,7 +9,7 @@ class JSONSerialBridge(Node):
     def __init__(self, serial_port='/dev/ttyACM1', baudrate=115200):
         super().__init__('json_serial_bridge')
 
-        self.ser = serial.Serial(serial_port, baudrate, timeout=1)
+        self.ser = serial.Serial(serial_port, baudrate, timeout=1)      # Comment to disable Serial Port Requirement
         self.topics = {
             '/simple_hexapod/Legs_paths': 'my_hexapod_interfaces/msg/LegPath',                           #subscribed topics whic will be passed on to serial.
             '/simple_hexapod/cmd_vel_path_var': 'my_hexapod_interfaces/msg/PathVarNCmdVel'
@@ -35,7 +35,7 @@ class JSONSerialBridge(Node):
             'msg': msg_dict
         }
         json_str = json.dumps(packet) + '\n'
-        self.ser.write(json_str.encode('utf-8'))
+        self.ser.write(json_str.encode('utf-8'))             # Comment to disable Serial Port Requirement
         self.get_logger().info("Message printed to serial of topic:" + str(topic))
         self.get_logger().info(json_str)     #Print whole packet to terminal for debugging
 

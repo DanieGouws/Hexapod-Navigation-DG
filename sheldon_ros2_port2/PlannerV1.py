@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from threading import Thread
-from math import atan2, sqrt
+from math import atan2, sqrt, isclose
 from numpy import zeros
 import time
 
@@ -61,24 +61,26 @@ class Planner(Node):
         self.di = atan2(vy, vx)
         self.walk_vel = sqrt(vx ** 2 + vy ** 2)
 
+        #If vx, vy is not zero, walk and ignore the turn speed
         if self.walk_vel != 0:
             tf = self.Ss / (self.walk_vel * 1000)
             self.dt = tf / (self.pathsize - 1)
             self.x, self.y, self.z, self.xd, self.yd, self.zd = self.Move.makepath_walk(
                 self.Ss, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
-            self.ang, _, self.ang_d, _ = self.Move.makepath_turn(self.yaw, 0, tf, self.pathsize)
+            self.ang, _, self.ang_d, _ = self.Move.makepath_turn(self.yaw, 0.0, tf, self.pathsize)
         elif self.walk_vel == 0 and self.yaw != 0:
             tf = 2
             self.dt = tf / (self.pathsize - 1)
             self.x, self.y, self.z, self.xd, self.yd, self.zd = self.Move.makepath_walk(
-                0, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
-            self.ang, _, self.ang_d, _ = self.Move.makepath_turn(self.yaw, 0, tf, self.pathsize)
+                0.0, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
+            self.ang, _, self.ang_d, _ = self.Move.makepath_turn(self.yaw, 0.0, tf, self.pathsize)
         else:
+            #self.get_logger().info('Speed and turn rate was zero.')
             tf = 2
-            self.dt = -1
+            self.dt = -1.0    #can't be neg 1...Please test this.
             self.x, self.y, self.z, self.xd, self.yd, self.zd = self.Move.makepath_walk(
-                0, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
-            self.ang, _, self.ang_d, _ = self.Move.makepath_turn(0, 0, tf, self.pathsize)
+                0.0, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
+            self.ang, _, self.ang_d, _ = self.Move.makepath_turn(0.0, 0.0, tf, self.pathsize)
 
         self.robot.sendpathflag = 1
         self.start()
