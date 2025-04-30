@@ -21,14 +21,14 @@ def main():
 
     # Set some command velocity and path parameters
     while(1):
-        command_hexapod.set_walk_velocity(x=0.02, y=0.00, t=0.0)
-        sleep(5)
-        command_hexapod.set_walk_velocity(x=0.00, y=0.02, t=0.0)
-        sleep(5)
-        command_hexapod.set_walk_velocity(x=-0.02, y=0.00, t=0.0)
-        sleep(5)
-        command_hexapod.set_walk_velocity(x=0.00, y=-0.02, t=0.0)
-        sleep(5)
+        command_hexapod.set_walk_velocity(x=0.05, y=0.00, t=0.0)
+        sleep(10)
+        command_hexapod.set_walk_velocity(x=0.00, y=0.05, t=0.0)
+        sleep(10)
+        command_hexapod.set_walk_velocity(x=-0.05, y=0.00, t=0.0)
+        sleep(10)
+        command_hexapod.set_walk_velocity(x=0.00, y=-0.05, t=0.0)
+        sleep(10)
     # command_hexapod.set_walk_velocity(x=0.0, y=0.00, t=9.0)
     # sleep(20)
     # command_hexapod.set_walk_velocity(x=0.00, y=0.00, t=0.0)
