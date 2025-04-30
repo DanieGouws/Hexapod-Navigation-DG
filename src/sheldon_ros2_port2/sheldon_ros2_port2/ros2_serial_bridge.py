@@ -6,7 +6,7 @@ import serial
 from functools import partial
 
 class JSONSerialBridge(Node):
-    def __init__(self, serial_port='/dev/ttyACM1', baudrate=115200):
+    def __init__(self, serial_port='/dev/ttyACM0', baudrate=115200):
         super().__init__('json_serial_bridge')
 
         self.ser = serial.Serial(serial_port, baudrate, timeout=1)      # Comment to disable Serial Port Requirement
