@@ -50,6 +50,7 @@ void MyDynamixel::WriteServos (uint8_t id, enum CONTROL_TABLE reg, uint8_t * dat
 	if(_port.available()>0)
 	{
 		uint8_t x=_port.readBytes(returnPack,6);
+    x = x;   //remove the unused variable warning.
 		// for(int i = 0; i < 6+dataLength; i++)
 		// {
 			// Serial.print(returnPack[i],HEX);
@@ -87,6 +88,7 @@ void MyDynamixel::ReadServos (uint8_t id, enum CONTROL_TABLE reg, uint8_t dataLe
 	if(_port.available()>0)
 	{
 		uint8_t x=_port.readBytes(returnPack,6+dataLength);
+    x = x;   //remove the unused variable warning.
 		// for(int i = 0; i < 6+dataLength; i++)
 		// {
 		 // Serial.println(returnPack[i],HEX);
