@@ -14,6 +14,6 @@ In particular this repo will focus on duplicating their control methods and then
 The repo is a clone of a ROS2 Jazzy workspace directory. This allows it to contain multiple packages which can be run with the use of colcon build and then $source install/setup.bash. For convenient access, the arduino code for the Teensy is also kept in the top level of the repo.
 - src: 
   -  my_hexapod_interfaces
-    - Format for the required msg files for publish and subscribe.  
+      - Format for the required msg files for publish and subscribe.  
   -  sheldon_ros2_port2
-    - Actual ros and python code responsible for high level motion control. 
+      - Actual ros and python code responsible for high level motion control. 
