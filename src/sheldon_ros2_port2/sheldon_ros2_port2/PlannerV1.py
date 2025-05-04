@@ -63,16 +63,17 @@ class Planner(Node):
 
         #If vx, vy is not zero, walk and ignore the turn speed
         if self.walk_vel != 0:
-            tf = self.Ss / (self.walk_vel * 1000)
+            tf = self.Ss / (self.walk_vel * 1000)   # time for 1 step
             self.dt = tf / (self.pathsize - 1)
             self.x, self.y, self.z, self.xd, self.yd, self.zd = self.Move.makepath_walk(
                 self.Ss, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
             self.ang, _, self.ang_d, _ = self.Move.makepath_turn(self.yaw, 0.0, tf, self.pathsize)
         elif self.walk_vel == 0 and self.yaw != 0:
-            tf = 2
+            tf = 2      # fix time/step as 2 s
             self.dt = tf / (self.pathsize - 1)
+            # makepath_walk: set Ss as 0,
             self.x, self.y, self.z, self.xd, self.yd, self.zd = self.Move.makepath_walk(
-                0.0, self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
+                0.0,     self.Sh, self.Fh, self.Rd, self.p, self.r, self.di, self.BH, tf, self.pathsize)
             self.ang, _, self.ang_d, _ = self.Move.makepath_turn(self.yaw, 0.0, tf, self.pathsize)
         else:
             #self.get_logger().info('Speed and turn rate was zero.')
