@@ -6,7 +6,7 @@ InverseKinematics::InverseKinematics(): InX1(429.75),InY1(0.0),InZ1(8.0),InYaw1(
 
 }
 
-//angles in degrees
+//roll, pitch yaw angles in degrees, output theta 1-3 in rads
 void InverseKinematics::IK(float *theta1,float *theta2,float *theta3,float x,float y,float z,int leg,float dt,float roll,float pitch,float yaw,int inEn) //can allow for theta offset
 {
     
