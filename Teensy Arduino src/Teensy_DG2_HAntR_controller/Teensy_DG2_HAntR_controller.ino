@@ -14,8 +14,9 @@ MyDynamixel dxl(DXL_SERIAL, 1000000, DEPin);
 
 // Loop timers
 static unsigned int stepTimerStart;     // start step every 1 s
+static unsigned int stepTimerClock;
 static unsigned int servoTimerStart;    // command servos every 10 ms
-
+static unsigned int servoTimerClock;  
 
 // foot tip (end of step) target points in world frame
 float xfoot_target[6];
@@ -44,7 +45,7 @@ float theta1[6];
 float theta2[6];
 float theta3[6];
 
-Vector3f foot_tips_world1[6] = {     //Sheldon's leg order and body frame definition
+Vector3f foot_tips_world[6] = {     //Sheldon's leg order and body frame definition
   Vector3f(283.71,   0.0,     0),
   Vector3f(141.855,  -245.7,  0),
   Vector3f(-141.855, -245.7,  0),
@@ -53,34 +54,81 @@ Vector3f foot_tips_world1[6] = {     //Sheldon's leg order and body frame defini
   Vector3f(141.855,  245.7,   0)
 };
 
-Vector3f foot_tips_world2[6] = {     //declare a second set of points to mock up periodic movement and timers
-  Vector3f(283.71,   0.0,     50),
+Vector3f foot_tips_world_buffer[6] = {     //Sheldon's leg order and body frame definition
+  Vector3f(283.71,   0.0,     0),
   Vector3f(141.855,  -245.7,  0),
-  Vector3f(-141.855, -245.7,  50),
+  Vector3f(-141.855, -245.7,  0),
   Vector3f(-283.71,  0.0,     0),
-  Vector3f(-141.855, 245.7,   50),
+  Vector3f(-141.855, 245.7,   0),
   Vector3f(141.855,  245.7,   0)
 };
 
-Vector3f foot_tips_world[6];
+// Vector3f foot_tips_world[6];
 Vector3f foot_tips_body[6];
 
+// Generate the 6th order polynomials the leg paths require
+class Poly6Interpolator3D {
+  public:
+    Poly6Interpolator3D() {}
+
+    // Initialize with start, mid, end points and total duration
+    void set(Vector3f p0, Vector3f pmid, Vector3f p1, float tf) {
+      tf_ = tf;
+
+      for (int i = 0; i < 3; ++i) {
+        float s0 = p0[i];
+        float sm = pmid[i];
+        float s1 = p1[i];
+
+        float dx1 = sm - s0;
+        float dx2 = s1 - s0;
+
+        // Coefficients: a0 + a1*t + ... + a6*t^6
+        a[i][0] = s0;
+        a[i][1] = 0;
+        a[i][2] = 0;
+        a[i][3] = (2 / pow(tf, 3)) * (32 * dx1 - 11 * dx2);
+        a[i][4] = -(3 / pow(tf, 4)) * (64 * dx1 - 27 * dx2);
+        a[i][5] = (3 / pow(tf, 5)) * (64 * dx1 - 30 * dx2);
+        a[i][6] = -(32 / pow(tf, 6)) * (2 * dx1 - dx2);
+      }
+    }
+
+    // Get position at time t ∈ [0, tf]
+    Vector3f get(float t) const {
+      t = constrain(t, 0.0f, tf_);
+      Vector3f p;
+      for (int i = 0; i < 3; ++i) {
+        float t2 = t * t;
+        float t3 = t2 * t;
+        float t4 = t3 * t;
+        float t5 = t4 * t;
+        float t6 = t5 * t;
+        p[i] = a[i][0] + a[i][1]*t + a[i][2]*t2 + a[i][3]*t3 +
+               a[i][4]*t4 + a[i][5]*t5 + a[i][6]*t6;
+      }
+      return p;
+    }
+
+  private:
+    float a[3][7];  // Coefficients for x, y, z
+    float tf_;      // Total time
+};
+
+
+//Interpolator3D lerp;
+Poly6Interpolator3D swingPaths[6];     //store the paths for the foot tips.
 
 void setup(){
-
-  
-
   // end_point_xyz = ... mockup some end points for group 1 and group 2 and try to get them to work. Hopefully it should walk in place when they are reached.
 
   Serial.begin(115200);
   Serial.println("Testing HAntR controller prototype...");
 
-  
-
     Vector3f gravity(0, 0, -1);  // From IMU, if available
-    for (int i = 0; i < 6; ++i) {
-      foot_tips_world[i] = foot_tips_world1[i];
-    }
+    // for (int i = 0; i < 6; ++i) {
+    //   foot_tips_world[i] = foot_tips_world1[i];
+    // }
     Matrix4f body_pose = computeBodyPose(foot_tips_world, gravity);
 
     // Serial.println("Body Pose Matrix (Tg):");
@@ -110,16 +158,21 @@ void setup(){
 
   //some startup sequence to make it go to safe mode
   servoTimerStart = millis();   // start timer clocks
-  stepTimerStart = millis();
+  stepTimerStart = millis()- 1500;  //delay to get it to initialize. Change this.
   activeGroup = 1; 
+  //   Vector3f pmid = (foot_tips_world1[0] + foot_tips_world2[0]) * 0.5;   // midpoint between p0 and p1
+  //   pmid.z() += 50.0;              // add height to Z coordinate only
+  // swingPaths[0].set(foot_tips_world1[0], pmid, foot_tips_world2[0], 1.0);
 }
 
 void loop(){
-  
+  stepTimerClock = millis() - stepTimerStart;
+  servoTimerClock = millis() - servoTimerStart;
 
   //end pointxyz of active group = read_serial_input();
   //return body pose and position of all feet.
   //somehow have the ros nodes generate target points based on high level commands.
+  // this is saved in a buffer which is only checked on each step change.
 
 
   // if (all tips have touched down (do with expired timer for now)){
@@ -130,16 +183,41 @@ void loop(){
   // }
 
   //the above
-  if(millis() - stepTimerStart > 1000){    // The 1s Step loop
+  if(stepTimerClock > 1000){    // The 1s Step loop
+    stepTimerStart = millis();
     
-    if(activeGroup == 1)activeGroup = 2;
-    else if(activeGroup == 2)activeGroup = 1;
+    if(activeGroup == 1){
+      activeGroup = 2;
+    }
+    else if(activeGroup == 2){
+      activeGroup = 1;
+    }
+
+    for(int i = 0; i < 6; i++){
+      Vector3f pmid = (foot_tips_world[i] + foot_tips_world_buffer[i]) * 0.5;   // midpoint between p0 and p1
+      pmid.z() += 50.0;              // add height to Z coordinate only
+      swingPaths[i].set(foot_tips_world[i], pmid, foot_tips_world_buffer[i], 1.0);   //somewhat inefficient to do all 6
+    }
+
+    // for(int i=0,j = 0; i < legs_per_group; i++){
+    //   if(activeGroup == 1){
+    //     j = group1[i];
+    //   }
+    //   else if(activeGroup == 2){
+    //     j = group2[i];
+    //   }
+    //   Vector3f pmid = (foot_tips_world[j] + foot_tips_world_buffer[j]) * 0.5;   // midpoint between p0 and p1
+    //   pmid.z() += 50.0;              // add height to Z coordinate only
+    //   swingPaths[j].set(foot_tips_world[j], pmid, foot_tips_world_buffer[j], 1.0);
+    // }
 
     //Poly[active legs].calculate_poly_coefs(start point xyz, end pointxyz);   //here the targets are converted to an executable buffer sortof. End points need to be set before this happens.
-    stepTimerStart = millis();
+    Serial.print("Switched to Group ");
+    Serial.println(activeGroup);
+    
   }
 
-  if(millis() - servoTimerStart >= 10){                  //100 Hz loop
+  if(servoTimerClock >= 10){                  //100 Hz loop
     servoTimerStart = millis();
 
     //assume that legs reached previous commanded points with some error. 
@@ -151,38 +229,54 @@ void loop(){
     
     // At each time step, get foot tip coords in world frame to command servos.
     // Stationary world coords stay unchanged
-    // for(int i = 0; i < legs_per_group; i++){
-    //   if(activeGroup == 1){
-    //     j = group1[i];
-    //   }
-    //   else if(activeGroup == 2){
-    //     j = group2[i]
-    //   }
+    for(int i=0,j = 0; i < legs_per_group; i++){
+      if(activeGroup == 1){
+        j = group1[i];
+      }
+      else if(activeGroup == 2){
+        j = group2[i];
+      }
+      foot_tips_world[j] = swingPaths[j].get(stepTimerClock/1000.0);
       
+    }
       
     //   //xfoot_world[j] = sample_line(j)           //probably need a class to track the coefs of each leg.
     //   // yfoot_world[j] = sample_line(j)
-    //   // zfoot_world[j] = sample_6o_polynomial(j)  //non-mentioned foot tips should just stay stationary in world coords
+    //   // zfoot_world[j] = sample_6o_polynomial(j)  //non-mentioned foot tips should just stay stationary in world coords.
     // }
-    if(activeGroup == 1){                     //choose legs depending on our step timer. Mockup for now.
-      for (int i = 0; i < 6; ++i) {
-        foot_tips_world[i] = foot_tips_world1[i];
-      }
-    }else if(activeGroup == 2){
-      for (int i = 0; i < 6; ++i) {
-        foot_tips_world[i] = foot_tips_world2[i];
-      }
-    }
+    // if(activeGroup == 1){                     //choose legs depending on our step timer. Mockup for now.
+    //   // for (int i = 0; i < 6; ++i) {
+    //   //   //foot_tips_world[i] = foot_tips_world1[i];
+        
+    //   // }
+    
+    // }else if(activeGroup == 2){
+    //   // for (int i = 0; i < 6; ++i) {
+    //   //   //foot_tips_world[i] = foot_tips_world2[i];
+    //   // }
+    // }
+
+    // for (int i = 0; i < 6; ++i) {
+    //   foot_tips_world[i] = foot_tips_world1[i];
+    // }
+    //foot_tips_world[0] = swingPaths[0].get(stepTimerClock/1000.0);
 
     Vector3f gravity(0, 0, -1);  // From IMU, if available
     Matrix4f body_pose = computeBodyPose(foot_tips_world, gravity);
-
+    Serial.println();
     for(int i = 0; i < 6; i++){
-    foot_tips_body[i] = world_to_body_kins(foot_tips_world[i], body_pose);
-    InKin.IK(&theta1[i],&theta2[i],&theta3[i],foot_tips_body[i].x(),foot_tips_body[i].y(), foot_tips_body[i].z(),i,0,0,0,0,0);   //xyz are in world coords with leg 0 at 0 angle.
-  }
+      Serial.print(foot_tips_world[i].x());
+      Serial.print(" ");
+      Serial.print(foot_tips_world[i].y());
+      Serial.print(" ");
+      Serial.println(foot_tips_world[i].z());
 
-  SetAngles(theta1,theta2,theta3 ,10,10,10);
+      foot_tips_body[i] = world_to_body_kins(foot_tips_world[i], body_pose);
+      InKin.IK(&theta1[i],&theta2[i],&theta3[i],foot_tips_body[i].x(),foot_tips_body[i].y(), foot_tips_body[i].z(),i,0,0,0,0,0);   //xyz are in world coords with leg 0 at 0 angle.
+    }
+    Serial.println();
+    SetAngles(theta1,theta2,theta3 ,10,10,10);
+  
   }
 
 }
@@ -315,29 +409,8 @@ Vector3f world_to_body_kins(Vector3f foot_tips_world, Matrix4f body_pose) {
   return foot_tips_body;
 }
 
-class Interpolator3D {       //
-  public:
-    Interpolator3D() {}
 
-    Interpolator3D(const Vector3f& start_point, const Vector3f& end_point) {
-      setPoints(start_point, end_point);
-    }
 
-    void setPoints(const Vector3f& start_point, const Vector3f& end_point) {
-      p0 = start_point;
-      direction = end_point - start_point;
-    }
-
-    // Returns interpolated point for t in [0, 1]
-    Vector3f interpolate(float t) const {
-      t = constrain(t, 0.0f, 1.0f);
-      return p0 + t * direction;
-    }
-
-  private:
-    Vector3f p0;
-    Vector3f direction;
-};
 
 
 
