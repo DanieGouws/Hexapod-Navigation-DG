@@ -1,0 +1,217 @@
+<mujoco>
+  <option timestep="0.002"/>
+  <compiler angle="degree" coordinate="local"/>
+  
+  <visual>
+    <global  offwidth="160" offheight="90"/>
+    <map znear="0.025" zfar="10.0"/>
+    <rgba haze=".3 .3 .3 1"/>
+  </visual>
+
+  <asset>
+    <texture builtin="gradient" height="100" rgb1="1 1 1" rgb2="0 0 0" type="skybox" width="100"/>
+    <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+    <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8" type="2d" width="100"/>
+    <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="6.1 6.1" texture="texplane"/>
+    <material name="geom" texture="texgeom" texuniform="true"/>
+
+    <hfield name="HMap" file="hmap.png" size="5 5 0.3 0.2"/>
+    <!-- <mesh name="tiles" file="mesh/tiles.obj" refquat="1 -1 0 0"/> -->
+  </asset>
+
+  <!-- Model Classes -->
+  <default>
+    <default class="body">
+      <geom  type="box" condim="1" density="500"/>
+      <joint type="hinge" damping="300" armature=".01" limited="true"/>
+      <default class="yaw">
+        <joint axis="0 0 1" range="-90 90"/>
+        <position ctrlrange="-1.5708 1.5708"/>
+        <geom fromto="0 0 0 0.1 0 0" size="0.1"/>
+      </default>
+      <default class="pitch">
+        <joint axis="0 1 0" range="-60 60"/>
+        <position ctrlrange="-1.0472 1.0472"/>
+        <geom fromto="0 0 0 1 0 0" size="0.1"/>
+      </default>
+      <default class="knee">
+          <joint axis="0 1 0" range="-90 120"/>
+          <position ctrlrange="-1.5708 2.0944"/>
+          <geom fromto="0 0 0 1 0 0" size="0.05"/>
+        </default>
+    </default>
+    <!-- <position ctrllimited="true" kp="100000"/> -->
+    <position ctrllimited="true" kp="10000"/>
+  </default>
+
+  <!-- Model Layout -->
+  <worldbody>
+    <light diffuse="0.5 0.5 0.5" pos="0 0 3" dir="0 0 -1"/>
+    <!-- Floor -->
+    <geom conaffinity="1" condim="3" material="MatPlane" name="floor" pos="0 0 0" rgba="0.8 0.9 0.8 1" size="40 40 40" type="plane"/>
+    <geom conaffinity="1" condim="3" material="MatPlane" name="tiles" pos="8 0 0.001" rgba="0.8 0.9 0.8 1" type="hfield" hfield="HMap"/>
+    <geom name="cube1" pos="5 4 0.3" size="1 1 1" type="box"/>
+    <geom name="cube2" pos="4 -4 0.3" size="1 1 1" type="box"/>
+
+    <!-- Stairs -->
+    <geom pos="0 4 0" size="4 0.5 0.1" type="box"/>
+    <geom pos="0 5 0" size="4 0.5 0.3" type="box"/>
+    <geom pos="0 6 0" size="4 0.5 0.5" type="box"/>
+    <geom pos="0 7 0" size="4 0.5 0.7" type="box"/>
+    <geom pos="0 9 0" size="4 2 0.7" type="box"/>
+
+    <!-- <geom pos="0 -7 -0.9" type="mesh" mesh="tiles"/> -->
+
+    <body name="torso" childclass="body" pos="-5 0 3" euler="0 0 0">
+      <!-- Body -->
+      <joint type="free" limited="false"/>
+      <geom type="cylinder" size="0.7 0.15" rgba="0.9 0.9 0.5 1"/>
+
+      <!-- Camera -->
+      <body name="camera" pos="0.5 0 1.5" xyaxes="0 -1 0 0.5 0 0.5">
+        <camera name="cam" mode="fixed" fovy="60"/>
+      </body>
+
+      <!-- Front Left Leg -->
+      <body pos="0.6062 0.35 0" euler="0 0 30" childclass="yaw" name="front_left_leg">
+        <joint name="front_left_yaw"/>
+        <geom/>
+        <body pos="0.1 0 0" childclass="pitch">
+          <joint name="front_left_pitch"/>
+          <geom/>
+          <body pos="1 0 0" childclass="knee">
+            <joint name="front_left_knee"/>
+            <geom/>
+          </body>
+        </body>
+      </body>
+
+      <!-- Front Right Leg -->
+      <body pos="0.6062 -0.35 0" euler="0 0 -30" childclass="yaw" name="front_right_leg">
+        <joint name="front_right_yaw"/>
+        <geom/>
+        <body pos="0.1 0 0" childclass="pitch">
+          <joint name="front_right_pitch"/>
+          <geom/>
+          <body pos="1 0 0" childclass="knee">
+            <joint name="front_right_knee"/>
+            <geom/>
+          </body>  
+        </body>
+      </body>
+
+      <!-- Mid Left Leg -->
+      <body pos="0 0.7 0" euler="0 0 90" childclass="yaw" name="mid_left_leg">
+        <joint name="mid_left_yaw"/>
+        <geom/>
+        <body pos="0.1 0 0" childclass="pitch">
+          <joint name="mid_left_pitch"/>
+          <geom/>
+          <body pos="1 0 0" childclass="knee">
+            <joint name="mid_left_knee"/>
+            <geom/>
+          </body>  
+        </body>
+      </body>
+
+      <!-- Mid Right Leg -->
+      <body pos="0 -0.7 0" euler="0 0 -90" childclass="yaw" name="mid_right_leg">
+        <joint name="mid_right_yaw"/>
+        <geom/>
+        <body pos="0.1 0 0" childclass="pitch">
+          <joint name="mid_right_pitch"/>
+          <geom/>
+          <body pos="1 0 0" childclass="knee">
+            <joint name="mid_right_knee"/>
+            <geom/>
+          </body>  
+        </body>
+      </body>
+
+      <!-- Bottom Left Leg -->
+      <body pos="-0.6062 0.35 0" euler="0 0 150" childclass="yaw" name="back_left_leg">
+        <joint name="back_left_yaw"/>
+        <geom/>
+        <body pos="0.1 0 0" childclass="pitch">
+          <joint name="back_left_pitch"/>
+          <geom/>
+          <body pos="1 0 0" childclass="knee">
+            <joint name="back_left_knee"/>
+            <geom/>
+          </body>  
+        </body>
+      </body>
+
+      <!-- Bottom Right Leg -->
+      <body pos="-0.6062 -0.35 0" euler="0 0 -150" childclass="yaw" name="back_right_leg">
+        <joint name="back_right_yaw"/>
+        <geom/>
+        <body pos="0.1 0 0" childclass="pitch">
+          <joint name="back_right_pitch"/>
+          <geom/>
+          <body pos="1 0 0" childclass="knee">
+            <joint name="back_right_knee"/>
+            <geom/>
+          </body>  
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position joint="front_left_yaw" class="yaw" name="front_left_yaw"/>
+    <position joint="front_left_pitch" class="pitch" name="front_left_pitch"/>
+    <position joint="front_left_knee" class="knee" name="front_left_knee"/>
+
+    <position joint="front_right_yaw" class="yaw" name="front_right_yaw"/>
+    <position joint="front_right_pitch" class="pitch" name="front_right_pitch"/>
+    <position joint="front_right_knee" class="knee" name="front_right_knee"/>
+
+    <position joint="mid_left_yaw" class="yaw" name="mid_left_yaw"/>
+    <position joint="mid_left_pitch" class="pitch" name="mid_left_pitch"/>
+    <position joint="mid_left_knee" class="knee" name="mid_left_knee"/>
+
+    <position joint="mid_right_yaw" class="yaw"name="mid_right_yaw"/>
+    <position joint="mid_right_pitch" class="pitch" name="mid_right_pitch"/>
+    <position joint="mid_right_knee" class="knee" name="mid_right_knee"/>
+
+    <position joint="back_left_yaw" class="yaw" name="back_left_yaw"/>
+    <position joint="back_left_pitch" class="pitch" name="back_left_pitch"/>
+    <position joint="back_left_knee" class="knee" name="back_left_knee"/>
+
+    <position joint="back_right_yaw" class="yaw" name="back_right_yaw"/>
+    <position joint="back_right_pitch" class="pitch"name="back_right_pitch"/>
+    <position joint="back_right_knee" class="knee" name="back_right_knee"/>
+  </actuator>
+
+  <sensor>
+    <framepos name="cam_position" objtype="camera" objname="cam"/>
+    <framepos name="body_position" objtype="body" objname="torso"/>
+    <framequat name="cam_quaternion" objtype="camera" objname="cam"/>
+    <framequat name="body_quaternion" objtype="body" objname="torso"/>
+    
+    <actuatorfrc actuator="front_left_yaw"/>
+    <actuatorfrc actuator="front_left_pitch"/>
+    <actuatorfrc actuator="front_left_knee"/>
+
+    <actuatorfrc actuator="front_right_yaw"/>
+    <actuatorfrc actuator="front_right_pitch"/>
+    <actuatorfrc actuator="front_right_knee"/>
+
+    <actuatorfrc actuator="mid_left_yaw"/>
+    <actuatorfrc actuator="mid_left_pitch"/>
+    <actuatorfrc actuator="mid_left_knee"/>
+
+    <actuatorfrc actuator="mid_right_yaw"/>
+    <actuatorfrc actuator="mid_right_pitch"/>
+    <actuatorfrc actuator="mid_right_knee"/>
+
+    <actuatorfrc actuator="back_left_yaw"/>
+    <actuatorfrc actuator="back_left_pitch"/>
+    <actuatorfrc actuator="back_left_knee"/>
+
+    <actuatorfrc actuator="back_right_yaw"/>
+    <actuatorfrc actuator="back_right_pitch"/>
+    <actuatorfrc actuator="back_right_knee"/>
+  </sensor>
+</mujoco>
