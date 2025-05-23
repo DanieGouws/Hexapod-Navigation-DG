@@ -28,40 +28,85 @@ mujoco_to_micro_index = [
     6, 7, 8,     # back_left: servo 6-8
     3, 4, 5      # back_right: servo 3-5
 ]
+micro_to_mujoco_index = [0] * 18
+for mujoco_idx, micro_idx in enumerate(mujoco_to_micro_index):
+    micro_to_mujoco_index[micro_idx] = mujoco_idx
+print(micro_to_mujoco_index)
+
+
+
+
 
 def serial_listener():
     """Background thread to receive microcontroller commands asynchronously."""
-    with serial.Serial(SERIAL_PORT, baudrate=BAUD_RATE, timeout=0.05) as ser:
+    with serial.Serial(SERIAL_PORT, baudrate=BAUD_RATE, timeout=0.01) as ser:
+        line_buffer = b''
+
         while True:
-            sync = ser.read(1)
-            if not sync or sync[0] != SYNC_BYTE:
+            first_byte = ser.read(1)
+
+            if not first_byte:
                 continue
 
-            angle_data = ser.read(4 * NUM_ACTUATORS)
-            if len(angle_data) != 4 * NUM_ACTUATORS:
-                continue
+            # Check for command bytes
+            if first_byte[0] == 0xAB:
+                angle_data = ser.read(4 * NUM_ACTUATORS)
+                if len(angle_data) == 4 * NUM_ACTUATORS:
+                    try:
+                        mc_angles = struct.unpack('<18f', angle_data)
+                        _ = ser.read(4 * NUM_ACTUATORS)  # discard speeds
+                        with ctrl_lock:
+                            for mujoco_idx in range(NUM_ACTUATORS):
+                                mc_idx = mujoco_to_micro_index[mujoco_idx]
+                                control_buffer[mujoco_idx] = mc_angles[mc_idx]
+                    except struct.error:
+                        continue
 
-            try:
-                mc_angles = struct.unpack('<18f', angle_data)
-            except struct.error:
-                continue
+            # elif first_byte[0] == 0xCD:
+            #     id_byte = ser.read(1)
+            #     if not id_byte:
+            #         continue
 
-            # Optional: read and ignore speeds
-            _ = ser.read(4 * NUM_ACTUATORS)
+            #     micro_id = id_byte[0]
+            #     if 0 <= micro_id < NUM_ACTUATORS:
+                    
+            #         mujoco_id = micro_to_mujoco_index[micro_id]
+            #         joint_index = model.actuator_trnid[mujoco_id][0]
+            #         joint_qpos = data.qpos[model.jnt_qposadr[joint_index]]
+            #         response = struct.pack('<d', joint_qpos)
+            #         ser.write(response)
+                    # retrieved_actuator_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, mujoco_id)
+                    # print(f"Teensy ID {micro_id} → MuJoCo actuator {mujoco_id} ({retrieved_actuator_name}) gives {joint_qpos}")
 
-            # Remap angles to match MuJoCo actuator order
-            with ctrl_lock:
-                for mujoco_idx in range(NUM_ACTUATORS):
-                    mc_idx = mujoco_to_micro_index[mujoco_idx]
-                    control_buffer[mujoco_idx] = mc_angles[mc_idx]
 
-# Start background serial thread
-serial_thread = threading.Thread(target=serial_listener, daemon=True)
-serial_thread.start()
+            elif first_byte[0] == 0xCE:
+                with ctrl_lock:
+                    joint_angles = []
+                    for i in range(NUM_ACTUATORS):
+                        mujoco_id = micro_to_mujoco_index[i]
+                        joint_index = model.actuator_trnid[mujoco_id][0]
+                        angle = data.qpos[model.jnt_qposadr[joint_index]]
+                        joint_angles.append(angle)
+                response = struct.pack('<18d', *joint_angles)
+                ser.write(response)
+
+            else:    #Just print to terminal output
+                # Treat as normal text: accumulate until newline
+                line_buffer += first_byte
+                if first_byte == b'\n':
+                    try:
+                        print(line_buffer.decode().strip())
+                    except UnicodeDecodeError:
+                        print("[Decode error]", line_buffer)
+                    line_buffer = b''  # reset buffer
 
 # Load and run simulation
 model = mujoco.MjModel.from_xml_path(MODEL_PATH)
 data = mujoco.MjData(model)
+
+# Start background serial thread
+serial_thread = threading.Thread(target=serial_listener, daemon=True)
+serial_thread.start()
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
     print("Simulation running. Press ESC to exit.")

@@ -115,7 +115,7 @@ void loop(){
     for(int i = 0; i < 6; i++){
       Vector3f pmid = (foot_tips_world[i] + foot_tips_world_buffer[i]) * 0.5;   // midpoint between p0 and p1
       pmid.z() += 50.0;              // height to make foot rise above ground
-      swingPaths[i].set(foot_tips_world[i], pmid, foot_tips_world_buffer[i], STEP_PERIOD_ms/1000.0);   // calculate poly6 to create path for foot to follow, not necessary for all 6
+      swingPaths[i].set(foot_tips_world[i], pmid, foot_tips_world_buffer[i], stepTimerClock/STEP_PERIOD_ms);   // calculate poly6 to create path for foot to follow, not necessary for all 6
     }
 
   Serial.print("Switched to Group " + String(activeGroup));
