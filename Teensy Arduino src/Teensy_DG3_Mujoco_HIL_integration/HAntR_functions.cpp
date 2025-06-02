@@ -17,7 +17,7 @@ Matrix4f computeBodyPose(Vector3f foot_tips[6], Vector3f gravity) {
   Vector3f ghat = gravity.normalized();
 
   // Step 3: Compute body translation
-  const float h_def = 100.0;  // Default body height above feet centroid  in mm
+  const float h_def = 150.0;  // Default body height above feet centroid  in mm
   Vector3f Tg_tran = centroid - h_def * ghat;
   Tg_tran.z() = h_def;                   //Keep body at constant height for now
 
@@ -113,7 +113,7 @@ void offsetFeet(Vector3f dest[6], const Vector3f src[6], const Vector2f& offset)
 Poly6Interpolator3D::Poly6Interpolator3D(){}
 
 // Initialize with start, mid, end points and total duration
-void Poly6Interpolator3D::set(Vector3f p0, Vector3f pmid, Vector3f p1, float tf = 1.0) {
+void Poly6Interpolator3D::set(Vector3f p0, Vector3f pmid, Vector3f p1, float tf) {
   tf_ = tf;
 
   for (int i = 0; i < 3; ++i) {

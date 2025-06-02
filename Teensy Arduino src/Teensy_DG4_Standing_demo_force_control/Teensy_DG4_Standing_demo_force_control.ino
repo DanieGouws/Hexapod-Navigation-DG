@@ -22,7 +22,7 @@ static unsigned int stepTimerClock;
 static unsigned int servoTimerStart;    // command servos every 10 ms
 static unsigned int servoTimerClock; 
 #define STEP_PERIOD_ms 1000.0
-#define SERVO_PERIOD_ms 200.0
+#define SERVO_PERIOD_ms 50.0
 
 // foot group control
 const int legs_per_group = 3;
@@ -85,6 +85,7 @@ void setup(){
 void loop(){
   stepTimerClock = millis() - stepTimerStart;
   servoTimerClock = millis() - servoTimerStart;
+  // static unsigned int ReadStart = 0;
 
   //end pointxyz of active group = read_serial_input();
   //maybe return body pose and position of all feet.
@@ -128,135 +129,72 @@ void loop(){
   // Kins to servo Angles. Write to servos.
   if(servoTimerClock >= SERVO_PERIOD_ms){                  //100 Hz Servo write loop
     servoTimerStart = millis();
-
-    // for(int i=0,j = 0; i < legs_per_group; i++){    // find indexes of active feet. Improve maybe.
-    //   if(activeGroup == 1){
-    //     j = group1[i];
-    //   }
-    //   else if(activeGroup == 2){
-    //     j = group2[i];
-    //   }
-    //   foot_tips_world[j] = swingPaths[j].get(stepTimerClock/STEP_PERIOD_ms);   // Sample polynomial for foot pos.
-    // }
-
-    // foot_tips_world         //modify these such that they are all in contact with the ground.
+    
 
 
-    // Serial.print("Servo 0[rad]: ");
-    // Serial.println(ServoPosSim(1));
-
-    // Read all 18 servos (3 per leg)
-    // for (int leg = 0; leg < 6; leg++) {
-    //   theta1[leg] = ServoPosSim(leg * 3 + 0);  // Yaw
-    //   theta2[leg] = ServoPosSim(leg * 3 + 1);  // Pitch 1
-    //   theta3[leg] = ServoPosSim(leg * 3 + 2);  // Pitch 2
-
-    //   float Px, Py, Pz;
-    //   FK03_inbody(Px, Py, Pz, theta1[leg], theta2[leg], theta3[leg], leg);
-    //   foot_tips_body_read[leg] = Vector3f(Px, Py, Pz);
-    // }
-
-    // for (uint8_t leg = 0; leg < 6; leg++) {
-
-    //   float yaw   = ServoPosSim(leg * 3 + 0);
-    //   float pitch1 = ServoPosSim(leg * 3 + 1);
-    //   float pitch2 = ServoPosSim(leg * 3 + 2);
-  
-
-    //   Serial.print("Leg ");
-    //   Serial.print(leg);
-    //   Serial.print(": Yaw=");
-    //   Serial.print(yaw, 4);
-    //   Serial.print("  Pitch1=");
-    //   Serial.print(pitch1, 4);
-    //   Serial.print("  Pitch2=");
-    //   Serial.println(pitch2, 4);
-    // }
-
-    // Print foot tip positions
-    // for (int leg = 0; leg < 6; leg++) {
-    //   Vector3f p = foot_tips_body_read[leg];
-    //   Serial.print("Leg ");
-    //   Serial.print(leg);
-    //   Serial.print(": (");
-    //   Serial.print(p.x(), 3);
-    //   Serial.print(", ");
-    //   Serial.print(p.y(), 3);
-    //   Serial.print(", ");
-    //   Serial.print(p.z(), 3);
-    //   Serial.println(")");
-    // }
-
+         //read from simulation
+    /*
     double angles[18];
     if (ReadAllServoAngles(angles)) {    //if the pc is too busy, just ignore it this loop
       for (int leg = 0; leg < 6; leg++) {
         float yaw    = angles[leg * 3 + 0];
         float pitch1 = -angles[leg * 3 + 1];
         float pitch2 = -angles[leg * 3 + 2];
-
-        // Serial.print("Leg ");
-        // Serial.print(leg);
-        // Serial.print(": Yaw=");
-        // Serial.print(yaw, 4);
-        // Serial.print("  Pitch1=");
-        // Serial.print(pitch1, 4);
-        // Serial.print("  Pitch2=");
-        // Serial.println(pitch2, 4);
-
         float Px, Py, Pz;
         FK03_inbody(Px, Py, Pz, yaw, pitch1, pitch2, leg);
         foot_tips_body_read[leg] = Vector3f(Px, Py, Pz);
       }
-
-      // Print foot tip positions
-      for (int leg = 0; leg < 6; leg++) {
-        Vector3f p = foot_tips_body_read[leg];
-        Serial.print("Leg ");
-        Serial.print(leg);
-        Serial.print(": (");
-        Serial.print(p.x(), 3);
-        Serial.print(", ");
-        Serial.print(p.y(), 3);
-        Serial.print(", ");
-        Serial.print(p.z(), 3);
-        Serial.println(")");
-      }
-    }
-
-   
-
-
-
+    }*/
     
-
-
-      
+      for (int leg = 0; leg < 6; leg++) {               //read from real hexapod
+        float yaw    = dxl.PresentPos(leg * 3 + 0);
+        float pitch1 = -dxl.PresentPos(leg * 3 + 1);
+        float pitch2 = -dxl.PresentPos(leg * 3 + 2);
+        float Px, Py, Pz;
+        FK03_inbody(Px, Py, Pz, yaw, pitch1, pitch2, leg);
+        foot_tips_body_read[leg] = Vector3f(Px, Py, Pz);
+      }
     Matrix4f body_pose = computeBodyPose(foot_tips_world, gravity);
 
-    static double z_error[6] =  {0.0};
+    Vector3f error[6];
     static double z_offset[6] =  {0.0};
     for(int i = 0; i < 6; i++){
       foot_tips_body[i] = world_to_body_kins(foot_tips_world[i], body_pose);                 // transform point from world to body frame
       //do some filter stuff
-      z_error[i] = foot_tips_body_read[i].z() - (foot_tips_body[i].z() + z_offset[i]);  //choose some appropriate gain given loop speed. Vector from command to read point.
+      error[i] = foot_tips_body_read[i] - (foot_tips_body[i] + Vector3f(0,0,z_offset[i]));  //choose some appropriate gain given loop speed. Vector from command to read point.
     }
 
-    double z_error_ave = 0.0;
+    Vector3f error_ave(0,0,0);
     for (int i = 0; i < 6; ++i) {
-      z_error_ave += z_error[i];
+      error_ave += error[i];
     }
-    z_error_ave /= 6.0;
+    error_ave /= 6.0;
+    Serial.print("GRF: ");
+    Serial.print(error_ave.x());
+    Serial.print("  ");
+    Serial.print(error_ave.y());
+    Serial.print("  ");
+    Serial.println(error_ave.z());
 
    
     for(int i = 0; i < 6; i++){
-      z_offset[i] += (z_error[i]- z_error_ave)*5*SERVO_PERIOD_ms/1000.0;
+      if(abs((error[i]- error_ave).z()) > 0.2){
+        z_offset[i] += (error[i]- error_ave).z()*20.0*SERVO_PERIOD_ms/1000.0;     //I-controller for foot height  //5 for sim
+      }
       InKin.IK(&theta1[i],&theta2[i],&theta3[i],foot_tips_body[i].x(),foot_tips_body[i].y(), foot_tips_body[i].z() + z_offset[i],i,0,0,0,0,0);   //xyz are in world coords with leg 0 at 0 angle.
       Serial.print( foot_tips_body[i].z() + z_offset[i]);
       Serial.print("  ");
       Serial.println(foot_tips_body_read[i].z());
     }
-    SetAngles(theta1,theta2,theta3 ,10,10,10);   // Write to servos
+    SetAngles(theta1,theta2,theta3 ,50,50,50);   // Write to servos
     SendServoStates(theta1,theta2,theta3 ,10,10,10);
+
+    // Serial.print("Total servo loop length us: ");
+    // Serial.println(micros() - ReadStart);
+    // if(micros() - ReadStart > SERVO_PERIOD_ms*1.01*1000.0){
+    //   Serial.println("TIMEOUT!!!!");
+    // }
+    // ReadStart = micros();
   }
 
 }
@@ -311,32 +249,6 @@ void SendServoStates(float* th1, float* th2, float* th3, float spd1, float spd2,
   Serial.write((uint8_t*)speeds, sizeof(speeds));
 
 }
-
-// double ServoPosSim(uint8_t id) {
-//   double position = 0;
-
-//   while (Serial.available()) Serial.read();    //flush stale bytes from the buffer
-
-//   Serial.write(0xCD);      // Sync/request byte
-//   Serial.write(id);        // Servo ID (0–17)
-
-//   unsigned long start = millis();
-//   while (Serial.available() < 8) {
-//     if (millis() - start > 50){
-//       Serial.println("RECEIVER TIMEOUT");
-//       return 0;  // Timeout
-//     }  
-//   }
-//   Serial.print("Time to response[ms]: ");
-//   Serial.println(millis() - start);
-
-//   // Read 8 bytes into double
-//   uint8_t buf[8];
-//   Serial.readBytes((char*)buf, 8);
-//   memcpy(&position, buf, 8);  // Byte-safe conversion
-//   // delay(1);
-//   return position;  // Radians
-// }
 
 bool ReadAllServoAngles(double angles[18]) {
   // Flush buffer

@@ -62,7 +62,7 @@ void MyDynamixel::WriteServos (uint8_t id, enum CONTROL_TABLE reg, uint8_t * dat
 
 void MyDynamixel::ReadServos (uint8_t id, enum CONTROL_TABLE reg, uint8_t dataLength, uint8_t* returnPack)
 {
-	//uint8_t returnPack[6+dataLength];
+	// uint8_t returnPack[6+dataLength];
 	uint8_t lengt = 4;
 	uint8_t readpacket[lengt + 4];
 
@@ -85,8 +85,7 @@ void MyDynamixel::ReadServos (uint8_t id, enum CONTROL_TABLE reg, uint8_t dataLe
 
 	_port.flush(); //wait for packet to be send
 	delayMicroseconds(300); //fixed return delay time	
-	if(_port.available()>0)
-	{
+	if(_port.available()>0){
 		uint8_t x=_port.readBytes(returnPack,6+dataLength);
     x = x;   //remove the unused variable warning.
 		// for(int i = 0; i < 6+dataLength; i++)
@@ -94,6 +93,9 @@ void MyDynamixel::ReadServos (uint8_t id, enum CONTROL_TABLE reg, uint8_t dataLe
 		 // Serial.println(returnPack[i],HEX);
 		// }
 		// Serial.print(x);
+	}
+	else{
+		Serial.println("SERVO READ TIMEOUT");
 	}
 	while(_port.read() >= 0){}
 	//return returnPack;

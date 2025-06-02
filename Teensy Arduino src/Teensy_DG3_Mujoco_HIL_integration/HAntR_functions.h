@@ -12,7 +12,7 @@ const int NUM_STEPS = 4 * (int)(SQUARE_SIZE / STEP_SIZE);  // 40 steps
 class Poly6Interpolator3D {
   public:
     Poly6Interpolator3D();
-    void set(Vector3f p0, Vector3f pmid, Vector3f p1, float tf);
+    void set(Vector3f p0, Vector3f pmid, Vector3f p1, float tf = 1.0);
     Vector3f get(float t) const;
 
   private:

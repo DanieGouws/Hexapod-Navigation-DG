@@ -62,6 +62,7 @@ void setup(){
 
   Serial.begin(115200);
   while(!Serial);
+  delay(500);
   Serial.println("Testing HAntR controller prototype...");    //See Paper 10.1109/ACCESS.2021.3053492
 
   Matrix4f body_pose = computeBodyPose(feet_neutral, gravity);   
@@ -89,7 +90,7 @@ void loop(){
   //maybe return body pose and position of all feet.
   //somehow have the ros nodes generate target points based on high level commands.
   // this is saved in a buffer which is only checked on each step change.
-  copyFeet(foot_tips_world_buffer,feet_neutral);                //Mock up of target feet positions read from serial port
+  // copyFeet(foot_tips_world_buffer,feet_neutral);                //Mock up of target feet positions read from serial port
 
 
   // if (all tips have touched down (do with expired timer for now)){
@@ -115,7 +116,7 @@ void loop(){
     for(int i = 0; i < 6; i++){
       Vector3f pmid = (foot_tips_world[i] + foot_tips_world_buffer[i]) * 0.5;   // midpoint between p0 and p1
       pmid.z() += 50.0;              // height to make foot rise above ground
-      swingPaths[i].set(foot_tips_world[i], pmid, foot_tips_world_buffer[i], stepTimerClock/STEP_PERIOD_ms);   // calculate poly6 to create path for foot to follow, not necessary for all 6
+      swingPaths[i].set(foot_tips_world[i], pmid, foot_tips_world_buffer[i]);   // calculate poly6 to create path for foot to follow, not necessary for all 6
     }
 
   Serial.print("Switched to Group " + String(activeGroup));
@@ -145,7 +146,7 @@ void loop(){
       InKin.IK(&theta1[i],&theta2[i],&theta3[i],foot_tips_body[i].x(),foot_tips_body[i].y(), foot_tips_body[i].z(),i,0,0,0,0,0);   //xyz are in world coords with leg 0 at 0 angle.
     }
     SetAngles(theta1,theta2,theta3 ,10,10,10);   // Write to servos
-    SendServoStates(theta1,theta2,theta3 ,10,10,10);
+    SendServoStates(theta1,theta2,theta3 ,10,10,10);   //write to sim
   }
 
 }
@@ -174,6 +175,7 @@ void SetAngles(float* th1,float* th2,float* th3 ,float spd1,float spd2, float sp
   dxl.SyncMove(Id,Angle,Spd,18);    // Drive the servos
 }
 
+//Write commanded servo positions to the Mujoco simulation via Serial port
 void SendServoStates(float* th1, float* th2, float* th3, float spd1, float spd2, float spd3) {
   float angles[18];
   float speeds[18];
