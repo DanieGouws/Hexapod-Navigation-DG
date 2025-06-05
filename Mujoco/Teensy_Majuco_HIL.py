@@ -6,7 +6,8 @@ import threading
 import numpy as np
 import time
 
-MODEL_PATH = "hexapod_Lotriet.xml"
+# MODEL_PATH = "hexapod_Lotriet.xml"
+MODEL_PATH = "hexapod_CAD_based.xml"
 SERIAL_PORT = "COM5"  # <-- Updated COM port
 BAUD_RATE = 115200
 NUM_ACTUATORS = 18

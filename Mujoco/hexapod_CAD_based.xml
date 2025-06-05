@@ -20,7 +20,11 @@
 
     <hfield name="HMap" file="hmap.png" size="0.5 0.5 0.03 0.02"/>
     <!-- <mesh name="tiles" file="mesh/tiles.obj" refquat="1 -1 0 0"/> -->
-    <mesh file="assets/hexapod_body.stl"/>
+    <mesh file="assets/hexapod_body.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/leg hip.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/leg_top.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/leg_middle.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/foot_tip_no_foot.stl" scale = "0.001 0.001 0.001"/>
   </asset>
 
   <!-- Model Classes -->
@@ -31,21 +35,22 @@
       <default class="yaw">
         <joint axis="0 0 1" range="-90 90"/>
         <position ctrlrange="-1.5708 1.5708"/>
-        <geom fromto="0 0 0 0.1 0 0" size="0.01"/>
+        <!-- <geom fromto="0 0 0 0.1 0 0" size="0.01"/> -->
       </default>
       <default class="pitch">
         <joint axis="0 1 0" range="-60 60"/>
         <position ctrlrange="-1.0472 1.0472"/>
-        <geom fromto="0 0 0 0.1 0 0" size="0.01"/>
+        <!-- <geom fromto="0 0 0 0.1 0 0" size="0.01"/> -->
       </default>
       <default class="knee">
           <joint axis="0 1 0" range="-90 120"/>
           <position ctrlrange="-1.5708 2.0944"/>
-          <geom fromto="0 0 0 0.1 0 0" size="0.01"/>
+          <!-- <geom fromto="0 0 0 0.1 0 0" size="0.01"/> -->
         </default>
     </default>
     <!-- <position ctrllimited="true" kp="100000"/> -->
-    <position ctrllimited="true" kp="13500"/>
+    <position ctrllimited="true" kp="100"/>
+    
   </default>
 
   <!-- Model Layout -->`
@@ -67,102 +72,111 @@
     <!-- <geom pos="0 -7 -0.9" type="mesh" mesh="tiles"/> -->
     <body name="test_cube_10cm" pos ="0 0 0.3">
       <joint type="free" limited="false"/>    
-      <geom type="box" size="0.05 0.05 0.05"/>
+      <geom type="box" size="0.05 0.05 0.05" density="1000"/>
     </body>
 
 
     <body name="torso" childclass="body" pos="-0.5 0 0.3" euler="0 0 0">
       <!-- Body -->
-      <joint type="free" limited="false"/>    
-      <!-- <geom type="cylinder" size="0.7 0.15" rgba="0.9 0.9 0.5 1"/> -->
-       <geom type="mesh" mesh="hexapod_body" mass="2.0" euler="90 0 0" pos = "-0.1 0.2 0"/>
+      <joint type="free" limited="false" damping="0"/>    
+      <!-- <geom type="cylinder" size="0.07 0.015" rgba="0.9 0.9 0.5 1"/> -->
+      <!-- <geom type="mesh" mesh="hexapod_body" mass="2.0" euler="90 0 0" pos = "-0.1 0.2 0"/> -->
+      <geom type="mesh" mesh="hexapod_body" density="10000" />
+
+      <geom type="mesh" mesh="leg hip" density="1000" pos="0.109 0.064 0" euler="0 0 30"/>
+      <geom type="mesh" mesh="leg hip" density="1000" pos="0 0.126 0" euler="0 0 90"/>
+      <geom type="mesh" mesh="leg hip" density="1000" pos="-0.109 0.064 0" euler="0 0 150"/>
+      <geom type="mesh" mesh="leg hip" density="1000" pos="-0.109 -0.064 0" euler="0 0 210"/>
+      <geom type="mesh" mesh="leg hip" density="1000" pos="0 -0.126 0" euler="0 0 270"/>
+      <geom type="mesh" mesh="leg hip" density="1000" pos="0.109 -0.064 0" euler="0 0 330"/>
 
       <!-- Camera -->
-    <body name="camera" pos="0.05 0 0.4">
-      <camera name="cam" mode="fixed" fovy="60"/>
-    </body>
+      <body name="camera" pos="0.05 0 0.4">
+        <camera name="cam" mode="fixed" fovy="60"/>
+      </body>
 
       <!-- Front Left Leg -->
-      <body pos="0.06062 0.035 0" euler="0 0 30" childclass="yaw" name="front_left_leg">
+      <body pos="0.1087 0.06277 0" euler="0 0 30" childclass="yaw" name="front_left_leg">
         <joint name="front_left_yaw"/>
-        <geom/>
-        <body pos="0.01 0 0" childclass="pitch">
+        <geom type="mesh" mesh="leg_top" density="1000"/>
+        <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="front_left_pitch"/>
-          <geom/>
-          <body pos="0.1 0 0" childclass="knee">
+            <geom type="mesh" mesh="leg_middle" density="1000" pos="0.012 0 0.019"/>
+          <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="front_left_knee"/>
-            <geom/>
+            <geom type="mesh" mesh="foot_tip_no_foot" density="1000" friction="2.0 0.1 0.1"/>
           </body>
         </body>
       </body>
 
       <!-- Front Right Leg -->
-      <body pos="0.06062 -0.035 0" euler="0 0 -30" childclass="yaw" name="front_right_leg">
+      <body pos="0.1087 -0.06277 0" euler="0 0 -30" childclass="yaw" name="front_right_leg">
         <joint name="front_right_yaw"/>
-        <geom/>
-        <body pos="0.01 0 0" childclass="pitch">
+        <geom type="mesh" mesh="leg_top" density="1000"/>
+        <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="front_right_pitch"/>
-          <geom/>
-          <body pos="0.1 0 0" childclass="knee">
+            <geom type="mesh" mesh="leg_middle" density="1000" pos="0.012 0 0.019"/>
+          <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="front_right_knee"/>
-            <geom/>
-          </body>  
+            <geom type="mesh" mesh="foot_tip_no_foot" density="1000" friction="2.0 0.1 0.1"/>
+          </body>
         </body>
       </body>
+      
 
       <!-- Mid Left Leg -->
-      <body pos="0 0.07 0" euler="0 0 90" childclass="yaw" name="mid_left_leg">
+      <body pos="0 0.1255 0" euler="0 0 90" childclass="yaw" name="mid_left_leg">
         <joint name="mid_left_yaw"/>
-        <geom/>
-        <body pos="0.01 0 0" childclass="pitch">
+        <geom type="mesh" mesh="leg_top" density="1000"/>
+        <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="mid_left_pitch"/>
-          <geom/>
-          <body pos="0.1 0 0" childclass="knee">
+            <geom type="mesh" mesh="leg_middle" density="1000" pos="0.012 0 0.019"/>
+          <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="mid_left_knee"/>
-            <geom/>
-          </body>  
+            <geom type="mesh" mesh="foot_tip_no_foot" density="1000" friction="2.0 0.1 0.1"/>
+          </body>
         </body>
       </body>
 
       <!-- Mid Right Leg (scaled) -->
-      <body pos="0 -0.07 0" euler="0 0 -90" childclass="yaw" name="mid_right_leg">
+      <body pos="0 -0.1255 0" euler="0 0 -90" childclass="yaw" name="mid_right_leg">
         <joint name="mid_right_yaw"/>
-        <geom/>
-        <body pos="0.01 0 0" childclass="pitch">
+        <geom type="mesh" mesh="leg_top" density="1000"/>
+        <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="mid_right_pitch"/>
-          <geom/>
-          <body pos="0.1 0 0" childclass="knee">
+            <geom type="mesh" mesh="leg_middle" density="1000" pos="0.012 0 0.019"/>
+          <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="mid_right_knee"/>
-            <geom/>
-          </body>  
+            <geom type="mesh" mesh="foot_tip_no_foot" density="1000" friction="2.0 0.1 0.1"/>
+          </body>
         </body>
       </body>
 
       <!-- Back Left Leg (scaled) -->
-      <body pos="-0.06062 0.035 0" euler="0 0 150" childclass="yaw" name="back_left_leg">
+       <body pos="-0.1087 0.06277 0" euler="0 0 150" childclass="yaw" name="back_left_leg">
         <joint name="back_left_yaw"/>
-        <geom/>
-        <body pos="0.01 0 0" childclass="pitch">
+        <geom type="mesh" mesh="leg_top" density="1000"/>
+        <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="back_left_pitch"/>
-          <geom/>
-          <body pos="0.1 0 0" childclass="knee">
+            <geom type="mesh" mesh="leg_middle" density="1000" pos="0.012 0 0.019"/>
+          <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="back_left_knee"/>
-            <geom/>
-          </body>  
+            <geom type="mesh" mesh="foot_tip_no_foot" density="1000" friction="2.0 0.1 0.1"/>
+          </body>
         </body>
       </body>
 
       <!-- Back Right Leg (scaled) -->
-      <body pos="-0.06062 -0.035 0" euler="0 0 -150" childclass="yaw" name="back_right_leg">
+       <body pos="-0.1087 -0.06277 0" euler="0 0 -150" childclass="yaw" name="back_right_leg">
         <joint name="back_right_yaw"/>
-        <geom/>
-        <body pos="0.01 0 0" childclass="pitch">
+        <geom type="mesh" mesh="leg_top" density="1000"/>
+        <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="back_right_pitch"/>
-          <geom/>
-          <body pos="0.1 0 0" childclass="knee">
+            <geom type="mesh" mesh="leg_middle" density="1000" pos="0.012 0 0.019"/>
+          <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="back_right_knee"/>
-            <geom/>
-          </body>  
+            <geom type="mesh" mesh="foot_tip_no_foot" density="1000" friction="2.0 0.1 0.1"/>
+          </body>
         </body>
       </body>
 
