@@ -1,5 +1,5 @@
 <mujoco>
-  <option timestep="0.0002"/>
+  <option timestep="0.0003"/>
   <compiler angle="degree" coordinate="local"/>
   
   <visual>
@@ -25,6 +25,11 @@
     <mesh file="assets/leg_top.stl" scale = "0.001 0.001 0.001"/>
     <mesh file="assets/leg_middle.stl" scale = "0.001 0.001 0.001"/>
     <mesh file="assets/foot_tip_no_foot.stl" scale = "0.001 0.001 0.001"/>
+
+    <mesh file="assets/foot_tip_no_foot_foot.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/foot_tip_no_foot_motor.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/leg_top_motor.stl" scale = "0.001 0.001 0.001"/>
+    <mesh file="assets/leg_top_bracket.stl" scale = "0.001 0.001 0.001"/>
   </asset>
 
   <!-- Model Classes -->
@@ -70,10 +75,10 @@
     <geom pos="0 0.9 0" size="0.4 0.2 0.07" type="box"/>
 
     <!-- <geom pos="0 -7 -0.9" type="mesh" mesh="tiles"/> -->
-    <body name="test_cube_10cm" pos ="0 0 0.3">
+    <!-- <body name="test_cube_10cm" pos ="0 0 0.3">      //Test cube
       <joint type="free" limited="false"/>    
       <geom type="box" size="0.05 0.05 0.05" density="1000"/>
-    </body>
+    </body> -->
 
 
     <body name="torso" childclass="body" pos="-0.5 0 0.3" euler="0 0 0">
@@ -84,11 +89,11 @@
       <geom type="mesh" mesh="hexapod_body" mass="0.84" rgba="0.875 0.875 0.875 1" />
 
       <geom type="mesh" mesh="leg hip" mass="0.125" pos="0.109 0.064 0" euler="0 0 30" rgba="0.1 0.1 0.1 1"/>
-      <geom type="mesh" mesh="leg hip" mass="0.125" pos="0 0.126 0" euler="0 0 90"/>
-      <geom type="mesh" mesh="leg hip" mass="0.125" pos="-0.109 0.064 0" euler="0 0 150"/>
-      <geom type="mesh" mesh="leg hip" mass="0.125" pos="-0.109 -0.064 0" euler="0 0 210"/>
-      <geom type="mesh" mesh="leg hip" mass="0.125" pos="0 -0.126 0" euler="0 0 270"/>
-      <geom type="mesh" mesh="leg hip" mass="0.125" pos="0.109 -0.064 0" euler="0 0 330"/>
+      <geom type="mesh" mesh="leg hip" mass="0.125" pos="0 0.126 0" euler="0 0 90" rgba="0.1 0.1 0.1 1"/>
+      <geom type="mesh" mesh="leg hip" mass="0.125" pos="-0.109 0.064 0" euler="0 0 150" rgba="0.1 0.1 0.1 1"/>
+      <geom type="mesh" mesh="leg hip" mass="0.125" pos="-0.109 -0.064 0" euler="0 0 210" rgba="0.1 0.1 0.1 1"/>
+      <geom type="mesh" mesh="leg hip" mass="0.125" pos="0 -0.126 0" euler="0 0 270" rgba="0.1 0.1 0.1 1"/>
+      <geom type="mesh" mesh="leg hip" mass="0.125" pos="0.109 -0.064 0" euler="0 0 330" rgba="0.1 0.1 0.1 1"/>
 
       <!-- Camera -->
       <body name="camera" pos="0.05 0 0.4">
@@ -98,13 +103,15 @@
       <!-- Front Left Leg -->
       <body pos="0.1087 0.06277 0" euler="0 0 30" childclass="yaw" name="front_left_leg">
         <joint name="front_left_yaw"/>
-        <geom type="mesh" mesh="leg_top" mass="0.145" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_motor" mass="0.125" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_bracket" mass="0.02" rgba="0.875 0.875 0.875 1"/>
         <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="front_left_pitch"/>
             <geom type="mesh" mesh="leg_middle" mass="0.145" pos="0.012 0 0.019" rgba="0.875 0.875 0.875 1"/>
           <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="front_left_knee"/>
-            <geom type="mesh" mesh="foot_tip_no_foot" mass="0.145" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_motor" mass="0.125" friction="2.0 0.1 0.1" rgba="0.1 0.1 0.1 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_foot" mass="0.02" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
           </body>
         </body>
       </body>
@@ -112,13 +119,15 @@
       <!-- Front Right Leg -->
       <body pos="0.1087 -0.06277 0" euler="0 0 -30" childclass="yaw" name="front_right_leg">
         <joint name="front_right_yaw"/>
-        <geom type="mesh" mesh="leg_top" mass="0.145"/>
+       <geom type="mesh" mesh="leg_top_motor" mass="0.125" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_bracket" mass="0.02" rgba="0.875 0.875 0.875 1"/>
         <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="front_right_pitch"/>
             <geom type="mesh" mesh="leg_middle" mass="0.145" pos="0.012 0 0.019"/>
           <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="front_right_knee"/>
-            <geom type="mesh" mesh="foot_tip_no_foot" mass="0.145" friction="2.0 0.1 0.1"/>
+             <geom type="mesh" mesh="foot_tip_no_foot_motor" mass="0.125" friction="2.0 0.1 0.1" rgba="0.1 0.1 0.1 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_foot" mass="0.02" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
           </body>
         </body>
       </body>
@@ -127,13 +136,15 @@
       <!-- Mid Left Leg -->
       <body pos="0 0.1255 0" euler="0 0 90" childclass="yaw" name="mid_left_leg">
         <joint name="mid_left_yaw"/>
-        <geom type="mesh" mesh="leg_top" mass="0.145"/>
+       <geom type="mesh" mesh="leg_top_motor" mass="0.125" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_bracket" mass="0.02" rgba="0.875 0.875 0.875 1"/>
         <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="mid_left_pitch"/>
             <geom type="mesh" mesh="leg_middle" mass="0.145" pos="0.012 0 0.019"/>
           <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="mid_left_knee"/>
-            <geom type="mesh" mesh="foot_tip_no_foot" mass="0.145" friction="2.0 0.1 0.1"/>
+             <geom type="mesh" mesh="foot_tip_no_foot_motor" mass="0.125" friction="2.0 0.1 0.1" rgba="0.1 0.1 0.1 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_foot" mass="0.02" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
           </body>
         </body>
       </body>
@@ -141,13 +152,15 @@
       <!-- Mid Right Leg (scaled) -->
       <body pos="0 -0.1255 0" euler="0 0 -90" childclass="yaw" name="mid_right_leg">
         <joint name="mid_right_yaw"/>
-        <geom type="mesh" mesh="leg_top" mass="0.145"/>
+       <geom type="mesh" mesh="leg_top_motor" mass="0.125" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_bracket" mass="0.02" rgba="0.875 0.875 0.875 1"/>
         <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="mid_right_pitch"/>
             <geom type="mesh" mesh="leg_middle" mass="0.145" pos="0.012 0 0.019"/>
           <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="mid_right_knee"/>
-            <geom type="mesh" mesh="foot_tip_no_foot" mass="0.145" friction="2.0 0.1 0.1"/>
+             <geom type="mesh" mesh="foot_tip_no_foot_motor" mass="0.125" friction="2.0 0.1 0.1" rgba="0.1 0.1 0.1 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_foot" mass="0.02" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
           </body>
         </body>
       </body>
@@ -155,13 +168,15 @@
       <!-- Back Left Leg (scaled) -->
        <body pos="-0.1087 0.06277 0" euler="0 0 150" childclass="yaw" name="back_left_leg">
         <joint name="back_left_yaw"/>
-        <geom type="mesh" mesh="leg_top" mass="0.145"/>
+       <geom type="mesh" mesh="leg_top_motor" mass="0.125" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_bracket" mass="0.02" rgba="0.875 0.875 0.875 1"/>
         <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="back_left_pitch"/>
             <geom type="mesh" mesh="leg_middle" mass="0.145" pos="0.012 0 0.019"/>
           <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="back_left_knee"/>
-            <geom type="mesh" mesh="foot_tip_no_foot" mass="0.145" friction="2.0 0.1 0.1"/>
+             <geom type="mesh" mesh="foot_tip_no_foot_motor" mass="0.125" friction="2.0 0.1 0.1" rgba="0.1 0.1 0.1 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_foot" mass="0.02" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
           </body>
         </body>
       </body>
@@ -169,13 +184,15 @@
       <!-- Back Right Leg (scaled) -->
        <body pos="-0.1087 -0.06277 0" euler="0 0 -150" childclass="yaw" name="back_right_leg">
         <joint name="back_right_yaw"/>
-        <geom type="mesh" mesh="leg_top" mass="0.145"/>
+       <geom type="mesh" mesh="leg_top_motor" mass="0.125" rgba="0.1 0.1 0.1 1"/>
+        <geom type="mesh" mesh="leg_top_bracket" mass="0.02" rgba="0.875 0.875 0.875 1"/>
         <body pos="0.0527 0 0.005" childclass="pitch">
           <joint name="back_right_pitch"/>
             <geom type="mesh" mesh="leg_middle" mass="0.145" pos="0.012 0 0.019"/>
           <body pos="0.1015 0 0.002" childclass="knee">
             <joint name="back_right_knee"/>
-            <geom type="mesh" mesh="foot_tip_no_foot" mass="0.145" friction="2.0 0.1 0.1"/>
+             <geom type="mesh" mesh="foot_tip_no_foot_motor" mass="0.125" friction="2.0 0.1 0.1" rgba="0.1 0.1 0.1 1"/>
+            <geom type="mesh" mesh="foot_tip_no_foot_foot" mass="0.02" friction="2.0 0.1 0.1" rgba="1 0 0.05 1"/>
           </body>
         </body>
       </body>
