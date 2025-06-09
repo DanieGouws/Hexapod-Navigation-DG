@@ -51,11 +51,13 @@ def serial_listener():
 
             # Check for command bytes
             if first_byte[0] == 0xAB:
-                angle_data = ser.read(4 * NUM_ACTUATORS)
-                if len(angle_data) == 4 * NUM_ACTUATORS:
+                print("Found 0xAB")
+                angle_data = ser.read(8 * NUM_ACTUATORS)
+                if len(angle_data) == 8 * NUM_ACTUATORS:
                     try:
-                        mc_angles = struct.unpack('<18f', angle_data)
-                        _ = ser.read(4 * NUM_ACTUATORS)  # discard speeds
+                        print("Trying to unpack angles")
+                        mc_angles = struct.unpack('<18d', angle_data)
+                        _ = ser.read(8 * NUM_ACTUATORS)  # discard speeds
                         with ctrl_lock:
                             for mujoco_idx in range(NUM_ACTUATORS):
                                 mc_idx = mujoco_to_micro_index[mujoco_idx]

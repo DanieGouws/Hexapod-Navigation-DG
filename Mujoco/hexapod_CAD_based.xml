@@ -6,9 +6,6 @@
     <global  offwidth="160" offheight="90"/>
     <map znear="0.001" zfar="10.0"/>
     <rgba haze=".3 .3 .3 1"/>
-    <!-- <scale> -->
-      <!-- <global>0.1</global> Scale up small objects visually -->
-    <!-- </scale> -->
   </visual>
 
   <asset>
@@ -20,12 +17,10 @@
 
     <hfield name="HMap" file="hmap.png" size="0.5 0.5 0.03 0.02"/>
     <!-- <mesh name="tiles" file="mesh/tiles.obj" refquat="1 -1 0 0"/> -->
+
     <mesh file="assets/hexapod_body.stl" scale = "0.001 0.001 0.001"/>
     <mesh file="assets/leg hip.stl" scale = "0.001 0.001 0.001"/>
-    <mesh file="assets/leg_top.stl" scale = "0.001 0.001 0.001"/>
     <mesh file="assets/leg_middle.stl" scale = "0.001 0.001 0.001"/>
-    <mesh file="assets/foot_tip_no_foot.stl" scale = "0.001 0.001 0.001"/>
-
     <mesh file="assets/foot_tip_no_foot_foot.stl" scale = "0.001 0.001 0.001"/>
     <mesh file="assets/foot_tip_no_foot_motor.stl" scale = "0.001 0.001 0.001"/>
     <mesh file="assets/leg_top_motor.stl" scale = "0.001 0.001 0.001"/>
