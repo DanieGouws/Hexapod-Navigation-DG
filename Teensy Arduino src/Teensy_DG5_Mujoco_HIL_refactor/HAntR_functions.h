@@ -14,7 +14,7 @@ class HantrClass {
 public:
   Matrix4f computeBodyPose(Vector3f foot_tips[6], Vector3f gravity);
   Vector3f world_to_body_kins(Vector3f foot_tips_world, Matrix4f body_pose);
-  void offsetOrCopyFeet(Vector3f dest[6], const Vector3f src[6], const Vector2f offset = Vector2f(0, 0));
+  void offsetOrCopyFeet(Vector3f dest[6], const Vector3f src[6], const Vector2f offset = Vector2f(0, 0), double angle_rad = 0.0);
 };
 
 extern HantrClass Hantr;

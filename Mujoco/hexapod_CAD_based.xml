@@ -1,5 +1,5 @@
 <mujoco>
-  <option timestep="0.0003"/>
+  <option timestep="0.0001"/>
   <compiler angle="degree" coordinate="local"/>
   
   <visual>
@@ -50,6 +50,9 @@
     </default>
     <!-- <position ctrllimited="true" kp="100000"/> -->
     <position ctrllimited="true" kp="1000"/>
+    <geom contype="1" conaffinity="1"
+        solimp="0.99 0.99 0.01" solref="0.002 1"/>   
+        <!-- increase ground reaction force to decrease contact points on round stl mesh -->
     
   </default>
 

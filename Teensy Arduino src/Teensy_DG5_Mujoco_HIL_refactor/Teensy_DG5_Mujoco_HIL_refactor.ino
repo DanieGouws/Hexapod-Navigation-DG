@@ -22,8 +22,8 @@ static unsigned int stepTimerStart;     // start step every 1 s
 static unsigned int stepTimerClock;
 static unsigned int servoTimerStart;    // command servos every 10 ms
 static unsigned int servoTimerClock; 
-#define STEP_PERIOD_ms 1000.0
-#define SERVO_PERIOD_ms 10.0
+#define STEP_PERIOD_ms 500.0
+#define SERVO_PERIOD_ms 80.0
 
 // foot group control
 const int legs_per_group = 3;
@@ -44,13 +44,27 @@ Vector3f feet_neutral[6] = {     //Starting and safe position of feet in world c
 };
 
 Vector3f gravity(0, 0, -1);  // Body offset direction. From IMU, if available
-
 Vector3f foot_tips_body[6];
-
 Poly6Interpolator3D swingPaths[6];     //store the paths for the foot tips.
 
 //Joint Angle Variables
 double angles[18];
+
+//Some waypoints for testing Waypoint nav?
+Vector2f waypoints[7] = {     //Some waypoints (x,y) in m to play with
+  Vector2f(0.5, 1),  
+  Vector2f(1,-2),
+  Vector2f(2, 0.5),
+  Vector2f(1.2, 1),
+  Vector2f(0.5, 2),
+  Vector2f(0, 1.5)
+};
+
+Vector2f hex_pos = Vector2f(0,0);  // Position of the hexapod in m in the world frame.
+double hex_heading = 0.0;             // Heading of the hexapod [rad] in the world frame.
+#define vel_forward 0.1      //m/s
+double turn_rate = M_PI/10;          //rad/s
+
 
 void setup(){
   // end_point_xyz = ... mockup some end points for group 1 and group 2 and try to get them to work. Hopefully it should walk in place when they are reached.
@@ -100,9 +114,68 @@ void loop(){
   if(stepTimerClock > STEP_PERIOD_ms){    // The 1s Step loop
     stepTimerStart = millis();
 
-    Vector2f square_offset = Demo.getSquareStepPoint(step_index);               // Demo Square
-    Hantr.offsetOrCopyFeet(foot_tips_world_buffer, feet_neutral, square_offset);
-    step_index = (step_index + 1);// % NUM_STEPS;
+    // Vector2f square_offset = Demo.getSquareStepPoint(step_index);               // Demo Square
+
+    //
+    static int wpt_index=1;
+    double Kly = 0.5;  //characteristic decay length[m]
+    double Kturn = 5.0; //number of seconds to remove the error between target heading and current heading at initial turn rate.
+    
+
+
+    Vector2f wpt_src = waypoints[(wpt_index-1)%7];
+    Vector2f wpt_dest = waypoints[wpt_index];
+
+    Serial.print("Current dest:");
+    Serial.print(wpt_dest.x());
+    Serial.print(" ");
+    Serial.print(wpt_dest.y());
+    Serial.print("  Current hexapod position:");
+    Serial.print(hex_pos.x());
+    Serial.print(" ");
+    Serial.println(hex_pos.y());
+    
+
+    if((waypoints[wpt_index]-hex_pos).norm() < 0.1){
+      Serial.print("Found waypoint ");
+      Serial.println(wpt_index);
+      wpt_index = (wpt_index+1)%7;              //switch to next one if close enough
+    }
+      
+
+    double psi_track = atan2(wpt_dest.y()-wpt_src.y(), wpt_dest.x()-wpt_src.x());
+
+    // Matrix2f track_rot = Matrix2f(cos(psi_track), sin(psi_track), -sin(psi_track), cos(psi_track));
+    // Vector2f track_offset = hex_pos - wpt_src;
+    // Vector2f track_answer = track_rot * track_offset;
+
+    // double x_inTrack =  track_answer.x(); //change his angle def. Calculate with elegant frame matrices.
+    // double y_crossTrack = track_answer.y();
+
+    // double x_inTrack =     cos(psi_track)*(hex_pos.x()- wpt_src.x()) + sin(psi_track)*(hex_pos.y()- wpt_src.y()); //change his angle def. Calculate with elegant frame matrices.
+    double y_crossTrack = -sin(psi_track)*(hex_pos.x()- wpt_src.x()) + cos(psi_track)*(hex_pos.y()- wpt_src.y());
+    y_crossTrack *= -1;
+
+    double psi_ref = psi_track + atan(y_crossTrack/Kly);  //Kl is like a sort of half distance in x as it decays to the track.
+    //not atan(y/x).... It just goes in a straight line to target.
+
+    turn_rate = (psi_ref- hex_heading)/Kturn;
+
+    hex_heading += turn_rate*STEP_PERIOD_ms/1000.0;
+    Serial.print("hex_heading: ");
+    Serial.println(hex_heading);
+
+    //v = dx/dt
+    //dx = v*dt
+    
+    double step_length =  vel_forward*STEP_PERIOD_ms/1000.0;  //m/s * s = m
+    hex_pos.x() += step_length*cos(hex_heading);
+    hex_pos.y() += step_length*sin(hex_heading);
+
+    //use only mm after this point
+    
+    Hantr.offsetOrCopyFeet(foot_tips_world_buffer, feet_neutral, hex_pos*1000.0, hex_heading);
+    // step_index = (step_index + 1);// % NUM_STEPS;
     
     if(activeGroup == 1){       // switch active feet group
       activeGroup = 2;
@@ -117,7 +190,8 @@ void loop(){
       swingPaths[i].set(foot_tips_world[i], pmid, foot_tips_world_buffer[i]);   // calculate poly6 to create path for foot to follow, not necessary for all 6
     }
 
-  Serial.print("Switched to Group " + String(activeGroup));
+  Serial.println("Switched to Group " + String(activeGroup));
+  Serial.println();
   }
 
   // Assume that feet reached previous commanded points with some error if they hit ground. 

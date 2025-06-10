@@ -74,11 +74,22 @@ Vector3f HantrClass::world_to_body_kins(Vector3f foot_tips_world, Matrix4f body_
   return foot_tips_body;
 }
 
-void HantrClass::offsetOrCopyFeet(Vector3f dest[6], const Vector3f src[6], const Vector2f offset) {
+
+//Function to copy an array of feet points to another array of feet points. Can add an xy offset. If source is neutral hexagon on origin,
+// add an angle to rotate the hexagon before applying the offset.
+void HantrClass::offsetOrCopyFeet(Vector3f dest[6], const Vector3f src[6], const Vector2f offset, double angle_rad) {
+  float cos_theta = cos(angle_rad);
+  float sin_theta = sin(angle_rad);
+
   for (int i = 0; i < 6; ++i) {
-    dest[i] = src[i];
-    dest[i].x() += offset.x();
-    dest[i].y() += offset.y();
+    // Apply 2D rotation around Z axis (XY plane)
+    float x_rot = cos_theta * src[i].x() - sin_theta * src[i].y();
+    float y_rot = sin_theta * src[i].x() + cos_theta * src[i].y();
+
+    // Copy rotated and offset position
+    dest[i].x() = x_rot + offset.x();
+    dest[i].y() = y_rot + offset.y();
+    dest[i].z() = src[i].z();  // Z stays unchanged
   }
 }
 

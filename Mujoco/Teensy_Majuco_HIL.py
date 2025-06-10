@@ -51,11 +51,9 @@ def serial_listener():
 
             # Check for command bytes
             if first_byte[0] == 0xAB:
-                print("Found 0xAB")
                 angle_data = ser.read(8 * NUM_ACTUATORS)
                 if len(angle_data) == 8 * NUM_ACTUATORS:
                     try:
-                        print("Trying to unpack angles")
                         mc_angles = struct.unpack('<18d', angle_data)
                         _ = ser.read(8 * NUM_ACTUATORS)  # discard speeds
                         with ctrl_lock:
